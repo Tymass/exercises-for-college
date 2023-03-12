@@ -1,13 +1,14 @@
 from smtplib import SMTP_SSL, SMTP_SSL_PORT
 from email.message import EmailMessage
 
-SMTP_HOST = 'mail.example.com'
-SMTP_USER = 'someone@example.com'
-SMTP_PASS = 'Secret!'
+SMTP_HOST = 'smtp.wp.pl'
+SMTP_USER = 'krzysztofisthebest@wp.pl'
+# SMTP_PASS = input("Enter your password: ")
+SMTP_PASS = 'haslotestowe123'
 
 
-from_email = 'My name <someone@examples.com>'
-to_emails = ['nanodano@devdungeon.com', 'admin@devdungeon.com']
+from_email = SMTP_USER
+to_emails = ['krzysztofisthebest@wp.pl']
 email_message = EmailMessage()
 email_message.add_header('To', ', '.join(to_emails))
 email_message.add_header('From', from_email)

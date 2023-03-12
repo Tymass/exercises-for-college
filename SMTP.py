@@ -20,6 +20,6 @@ email_message.set_content('Hello, world!')
 smtp_server = SMTP_SSL(SMTP_HOST, port=SMTP_SSL_PORT)
 smtp_server.set_debuglevel(1)
 smtp_server.login(SMTP_USER, SMTP_PASS)
-smtp_server.sendmail(from_email, to_emails, email_message)
+smtp_server.sendmail(from_email, to_emails, email_message.as_bytes())
 
 smtp_server.quit()

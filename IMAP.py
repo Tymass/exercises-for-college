@@ -14,7 +14,6 @@ imap.login(email_address, passowrd)
 imap.select("Inbox")
 _, msgnums = imap.search(None, "ALL")  # wazne
 
-print(msgnums)
 
 for msgnum in msgnums[0].split():
     _, data = imap.fetch(msgnum, "(RFC822)")

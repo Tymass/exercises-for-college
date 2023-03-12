@@ -56,16 +56,17 @@ messages = messages[0].split(b' ')
 for msg_id in messages:
     status, message = imap.fetch(msg_id, '(RFC822)')
     email_body = message[0][1].decode('utf-8')
+    print(email_body)
     filtered_email = filter_email(email_body)
     topic = analyze_words(filtered_email)
     if topic == 0:  # temat oznaczony jako "spam"
         print('Email oznaczony jako spam')
         # Oznaczenie emaila jako spam
-        imap.store(msg_id, '+X-GM-LABELS', '\\Spam')
+        # imap.store(msg_id, '+FLAGS', '\Flagged')
     else:
         print('Email nie jest spamem')
-        # Przeniesienie emaila do folderu "Przetworzone"
-        imap.store(msg_id, '+X-GM-LABELS', '\\Przetworzone')
+    #    # Przeniesienie emaila do folderu "Przetworzone"
+        # imap.store(msg_id, '+X-GM-LABELS', '\\Przetworzone')
 
 # Zamknięcie połączenia z serwerem IMAP
 imap.close()

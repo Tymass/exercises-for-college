@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
 from SMTP import send_email
 from IMAP import read_email
+from autoresponder import autoresponder
 
 imap_server = "imap.wp.pl"
 email_address = ""
@@ -48,7 +49,7 @@ while True:
         send_email(to, subject, body, email_address, SMTP_PASS, SMTP_USER)
 
     if event == 'Refresh':
-        messages = read_email(email_address, password)
+        messages = read_email(email_address, password, SMTP_PASS)
         window['-LIST-'].update(values=messages)
 
     if event == 'Save':

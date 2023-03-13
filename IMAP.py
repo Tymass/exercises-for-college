@@ -4,11 +4,12 @@ import imaplib
 import chardet
 import re
 from email.header import decode_header
+from SMTP import send_email
 
 imap_server = "imap.wp.pl"
 
 
-def read_email(email_address, password):
+def read_email(email_address, password, SMTP_PASS):
 
     imap = imaplib.IMAP4_SSL(imap_server)
     imap.login(email_address, password)
@@ -51,6 +52,12 @@ def read_email(email_address, password):
             'To': to_,
             'Content': content
         })
+
+        auto_response_text = "Thank you for your email. We have received your message and will respond as soon as possible."
+        reply_subject = "Odpowiedź na: " + subject
+        reply_body = auto_response_text.format(from_=from_)
+        send_email(from_, reply_subject, reply_body,
+                   email_address, SMTP_PASS, email_address)
 
     imap.close()
 

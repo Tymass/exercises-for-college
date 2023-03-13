@@ -53,11 +53,14 @@ def read_email(email_address, password, SMTP_PASS):
             'Content': content
         })
 
-        auto_response_text = "Thank you for your email. We have received your message and will respond as soon as possible."
-        reply_subject = "Odpowiedź na: " + subject
-        reply_body = auto_response_text.format(from_=from_)
-        send_email(from_, reply_subject, reply_body,
-                   email_address, SMTP_PASS, email_address)
+        flags = imap.fetch(msgnum, '(FLAGS)')[1][0]
+        print(flags)
+        if b'\\Seen' not in flags:
+            auto_response_text = "Thank you for your email. We have received your message and will respond as soon as possible."
+            reply_subject = "Odpowiedź na: " + subject
+            reply_body = auto_response_text.format(from_=from_)
+            send_email(from_, reply_subject, reply_body,
+                       email_address, SMTP_PASS, email_address)
 
     imap.close()
 

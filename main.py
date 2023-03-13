@@ -1,7 +1,6 @@
 import PySimpleGUI as sg
 from SMTP import send_email
 from IMAP import read_email
-from autoresponder import autoresponder
 
 imap_server = "imap.wp.pl"
 email_address = ""

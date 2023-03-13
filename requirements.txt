@@ -1,0 +1,4 @@
+chardet==5.1.0
+html2text==2020.1.16
+PySimpleGUI==4.60.4
+sentence_transformers==2.2.2

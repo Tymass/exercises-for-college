@@ -1,12 +1,6 @@
 import PySimpleGUI as sg
-from smtplib import SMTP_SSL, SMTP_SSL_PORT
-from email.message import EmailMessage
-import html2text
-import email
-import imaplib
-import chardet
-import re
-from email.header import decode_header
+from SMTP import send_email
+from IMAP import read_email
 
 imap_server = "imap.wp.pl"
 email_address = ""
@@ -15,70 +9,6 @@ password = ""
 SMTP_HOST = 'smtp.wp.pl'
 SMTP_USER = ""
 SMTP_PASS = ""
-
-
-def send_email(to, subject, body, email_address, SMTP_PASS, SMTP_USER):
-    email_message = EmailMessage()
-    email_message.add_header('To', to)
-    email_message.add_header('From', SMTP_USER)
-    email_message.add_header('Subject', subject)
-    email_message.set_content(body)
-
-    smtp_server = SMTP_SSL(SMTP_HOST, port=SMTP_SSL_PORT)
-    smtp_server.set_debuglevel(1)
-    smtp_server.login(SMTP_USER, SMTP_PASS)
-    smtp_server.sendmail(email_address, to, email_message.as_bytes())
-    smtp_server.quit()
-
-
-def read_email(email_address, password):
-
-    imap = imaplib.IMAP4_SSL(imap_server)
-    imap.login(email_address, password)
-
-    imap.select("Inbox")
-    _, msgnums = imap.search(None, "ALL")  # wazne
-
-    messages = []
-    for msgnum in msgnums[0].split():
-        _, data = imap.fetch(msgnum, "(RFC822)")
-
-        message = email.message_from_bytes(data[0][1])
-        subject = decode_header(message.get('Subject'))[0][0]
-        if isinstance(subject, bytes):
-            # if it's a bytes type, decode to str
-            subject = subject.decode()
-        from_ = decode_header(message.get('From'))[0][0]
-        if isinstance(from_, bytes):
-            from_ = from_.decode()
-        to_ = decode_header(message.get('To'))[0][0]
-        if isinstance(to_, bytes):
-            to_ = to_.decode()
-
-        content = ''
-        for part in message.walk():
-            if part.get_content_maintype() == 'text':
-                kodowanie = part.get_content_charset()
-                if kodowanie is None:
-                    # Użyj modułu chardet do wykrycia kodowania
-                    kodowanie = chardet.detect(part.get_payload())['encoding']
-                tekst = part.get_payload(
-                    decode=True).decode(kodowanie, 'ignore')
-                tekst = re.sub(r'<table.*?>.*?</table>',
-                               '', tekst, flags=re.DOTALL)
-                content = html2text.html2text(tekst)
-
-        messages.append({
-            'Subject': subject,
-            'From': from_,
-            'To': to_,
-            'Content': content
-        })
-
-    imap.close()
-
-    return messages
-
 
 sg.theme('Default 1')
 layout = [

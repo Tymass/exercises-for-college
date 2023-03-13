@@ -6,39 +6,52 @@ import re
 from email.header import decode_header
 
 imap_server = "imap.wp.pl"
-email_address = "krzysztofisthebest@wp.pl"
-# passowrd = input("Enter your password: ")
-passowrd = "haslotestowe123"
-
-imap = imaplib.IMAP4_SSL(imap_server)
-imap.login(email_address, passowrd)
-
-imap.select("Inbox")
-_, msgnums = imap.search(None, "ALL")  # wazne
 
 
-for msgnum in msgnums[0].split():
-    _, data = imap.fetch(msgnum, "(RFC822)")
+def read_email(email_address, password):
 
-    message = email.message_from_bytes(data[0][1])
-    print(f"Message number: {msgnum}")
-    print(f"From: {decode_header(message.get('From'))[0][0]}")
-    print(f"To: {decode_header(message.get('To'))[0][0]}")
+    imap = imaplib.IMAP4_SSL(imap_server)
+    imap.login(email_address, password)
 
-    tresc = ''
-    for part in message.walk():
-        if part.get_content_maintype() == 'text':
-            kodowanie = part.get_content_charset()
-            if kodowanie is None:
-                # Użyj modułu chardet do wykrycia kodowania
-                kodowanie = chardet.detect(part.get_payload())['encoding']
-            tekst = part.get_payload(decode=True).decode(kodowanie, 'ignore')
-            tekst = re.sub(r'<table.*?>.*?</table>',
-                           '', tekst, flags=re.DOTALL)
-            tresc = html2text.html2text(tekst)
+    imap.select("Inbox")
+    _, msgnums = imap.search(None, "ALL")  # wazne
 
-    print(
-        f'CONTENT------------------------------------\n{tresc}')
+    messages = []
+    for msgnum in msgnums[0].split():
+        _, data = imap.fetch(msgnum, "(RFC822)")
 
+        message = email.message_from_bytes(data[0][1])
+        subject = decode_header(message.get('Subject'))[0][0]
+        if isinstance(subject, bytes):
+            # if it's a bytes type, decode to str
+            subject = subject.decode()
+        from_ = decode_header(message.get('From'))[0][0]
+        if isinstance(from_, bytes):
+            from_ = from_.decode()
+        to_ = decode_header(message.get('To'))[0][0]
+        if isinstance(to_, bytes):
+            to_ = to_.decode()
 
-imap.close()
+        content = ''
+        for part in message.walk():
+            if part.get_content_maintype() == 'text':
+                kodowanie = part.get_content_charset()
+                if kodowanie is None:
+                    # Użyj modułu chardet do wykrycia kodowania
+                    kodowanie = chardet.detect(part.get_payload())['encoding']
+                tekst = part.get_payload(
+                    decode=True).decode(kodowanie, 'ignore')
+                tekst = re.sub(r'<table.*?>.*?</table>',
+                               '', tekst, flags=re.DOTALL)
+                content = html2text.html2text(tekst)
+
+        messages.append({
+            'Subject': subject,
+            'From': from_,
+            'To': to_,
+            'Content': content
+        })
+
+    imap.close()
+
+    return messages

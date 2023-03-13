@@ -12,9 +12,9 @@ to_emails = ['krzysztofisthebest@wp.pl']
 email_message = EmailMessage()
 email_message.add_header('To', ', '.join(to_emails))
 email_message.add_header('From', from_email)
-email_message.add_header('Subject', 'Hello!')
+email_message.add_header('Subject', 'нет!!!')
 email_message.add_header('X-Priority', '1')
-email_message.set_content('Hello, world!')
+email_message.set_content('jaaaaasne awoeaoubotaboga eeeee reeee')
 
 
 smtp_server = SMTP_SSL(SMTP_HOST, port=SMTP_SSL_PORT)

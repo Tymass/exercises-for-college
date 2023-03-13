@@ -1,73 +1,57 @@
-import gensim
-from gensim.utils import simple_preprocess
-from gensim.parsing.preprocessing import STOPWORDS
-import imaplib
+import html2text
 import email
+import imaplib
+import chardet
 import re
+from email.header import decode_header
+from gensim.corpora import WikiCorpus
+from gensim.models.ldamodel import LdaModel
+from gensim.test.utils import datapath
+from gensim.corpora.dictionary import Dictionary
+from gensim import similarities
 
-# Dane do połączenia z serwerem IMAP
-IMAP_SERVER = 'imap.wp.pl'
-IMAP_PORT = 993
-EMAIL_ADDRESS = 'krzysztofisthebest@wp.pl'
-EMAIL_PASSWORD = 'haslotestowe123'
+# wczytanie gotowego modelu LDA
+wiki = WikiCorpus("plwiki-latest-pages-articles.xml.bz2")
+lda_model = LdaModel(wiki, num_topics=10, id2word=wiki.dictionary)
 
-# Funkcja do filtrowania emaila
+# próg decyzyjny dla klasyfikacji
+threshold = 0.5
 
+imap_server = "imap.wp.pl"
+email_address = "krzysztofisthebest@wp.pl"
+password = "haslotestowe123"
 
-def filter_email(email_text):
-    # Usunięcie tagów HTML z emaila
-    email_text = re.sub('<[^>]*>', '', email_text)
-    # Tokenizacja emaila i usunięcie stop words
-    tokens = [token for token in simple_preprocess(
-        email_text) if token not in STOPWORDS]
-    # Tworzenie tekstu bez stop words
-    filtered_email = ' '.join(tokens)
-    return filtered_email
+imap = imaplib.IMAP4_SSL(imap_server)
+imap.login(email_address, password)
 
-# Funkcja do analizy słów
+imap.select("Inbox")
+_, msgnums = imap.search(None, "ALL")
 
+for msgnum in msgnums[0].split():
+    _, data = imap.fetch(msgnum, "(RFC822)")
 
-def analyze_words(text):
-    # Tokenizacja tekstu
-    tokens = simple_preprocess(text)
-    # Usunięcie stop words
-    filtered_tokens = [token for token in tokens if token not in STOPWORDS]
-    # Utworzenie słownika
-    dictionary = gensim.corpora.Dictionary([filtered_tokens])
-    # Utworzenie korpusu
-    corpus = [dictionary.doc2bow(filtered_tokens)]
-    # Utworzenie modelu LDA
-    lda_model = gensim.models.ldamodel.LdaModel(
-        corpus=corpus, id2word=dictionary, num_topics=1)
-    # Zwrócenie tematu wiadomości
-    return lda_model[dictionary.doc2bow(filtered_tokens)][0][0]
+    message = email.message_from_bytes(data[0][1])
 
+    # konwersja treści HTML na tekst
+    content = ''
+    for part in message.walk():
+        if part.get_content_maintype() == 'text':
+            encoding = part.get_content_charset()
+            if encoding is None:
+                # Użyj modułu chardet do wykrycia kodowania
+                encoding = chardet.detect(part.get_payload())['encoding']
+            text = part.get_payload(decode=True).decode(encoding, 'ignore')
+            text = re.sub(r'<table.*?>.*?</table>', '', text, flags=re.DOTALL)
+            content = html2text.html2text(text)
 
-# Połączenie z serwerem IMAP
-imap = imaplib.IMAP4_SSL(IMAP_SERVER)
-imap.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-imap.select('Inbox')
+    # konwersja tekstu na wektor bag-of-words
+    bow = Dictionary.doc2bow(content.lower().split())
 
-# Pobranie wiadomości
-status, messages = imap.search(None, 'ALL')
-messages = messages[0].split(b' ')
-
-# Analiza i filtrowanie wiadomości
-for msg_id in messages:
-    status, message = imap.fetch(msg_id, '(RFC822)')
-    email_body = message[0][1].decode('utf-8')
-    print(email_body)
-    filtered_email = filter_email(email_body)
-    topic = analyze_words(filtered_email)
-    if topic == 0:  # temat oznaczony jako "spam"
-        print('Email oznaczony jako spam')
-        # Oznaczenie emaila jako spam
-        # imap.store(msg_id, '+FLAGS', '\Flagged')
+    # klasyfikacja za pomocą modelu LDA
+    doc_lda = lda_model[bow]
+    if max(doc_lda, key=lambda x: x[1])[1] > threshold:
+        print(f"Wiadomość o numerze {msgnum} jest SPAMem")
     else:
-        print('Email nie jest spamem')
-    #    # Przeniesienie emaila do folderu "Przetworzone"
-        # imap.store(msg_id, '+X-GM-LABELS', '\\Przetworzone')
+        print(f"Wiadomość o numerze {msgnum} jest OK")
 
-# Zamknięcie połączenia z serwerem IMAP
 imap.close()
-imap.logout()

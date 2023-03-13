@@ -1,12 +1,3 @@
-from smtplib import SMTP_SSL, SMTP_SSL_PORT
-from email.message import EmailMessage
-
-SMTP_HOST = 'smtp.wp.pl'
-SMTP_USER = 'krzysztofisthebest@wp.pl'
-# SMTP_PASS = input("Enter your password: ")
-SMTP_PASS = 'haslotestowe123'
-
-
 def send_email(to, subject, content):
     from_email = SMTP_USER
     to_emails = [to]

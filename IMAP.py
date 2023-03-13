@@ -20,17 +20,10 @@ _, msgnums = imap.search(None, "ALL")  # wazne
 for msgnum in msgnums[0].split():
     _, data = imap.fetch(msgnum, "(RFC822)")
 
-    # raw_email_string = data[0][1].decode('utf-8')
-    # mail = mailparser.parse_from_string(raw_email_string)
-
     message = email.message_from_bytes(data[0][1])
-    # print(f"Message number: {msgnum}")
+    print(f"Message number: {msgnum}")
     print(f"From: {decode_header(message.get('From'))[0][0]}")
     print(f"To: {decode_header(message.get('To'))[0][0]}")
-    # print(f"BCC: {message.get('BCC')}")
-    # print(f"Date: {message.get('Date')}")
-    # print(f"Subject: {message.get('Subject')}")
-    # print(f'Content: \n{mail.text_plain}')
 
     tresc = ''
     for part in message.walk():

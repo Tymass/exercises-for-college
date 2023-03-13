@@ -1,6 +1,9 @@
 import PySimpleGUI as sg
 from SMTP import send_email
 from IMAP import read_email
+from sentence_transformers import CrossEncoder
+model = CrossEncoder('cross-encoder/stsb-distilroberta-base')
+
 
 imap_server = "imap.wp.pl"
 email_address = ""
@@ -9,6 +12,20 @@ password = ""
 SMTP_HOST = 'smtp.wp.pl'
 SMTP_USER = ""
 SMTP_PASS = ""
+
+
+def check_similarity(messages):
+    if len(messages) > 1:
+        last_msg = messages[-1]
+        prev_msg = messages[-2]
+        if isinstance(last_msg, dict) and 'Content' in last_msg and isinstance(prev_msg, dict) and 'Content' in prev_msg:
+            similarity = model.predict(
+                [last_msg['Content'], prev_msg['Content']])[0]
+            if similarity > 0.3:
+                print("Last message is similar to previous message")
+    else:
+        print("Not enough messages to check similarity")
+
 
 sg.theme('Default 1')
 layout = [
@@ -50,6 +67,7 @@ while True:
     if event == 'Refresh':
         messages = read_email(email_address, password, SMTP_PASS)
         window['-LIST-'].update(values=messages)
+        # check_similarity(messages)
 
     if event == 'Save':
         email_address = values['-EMAIL-']

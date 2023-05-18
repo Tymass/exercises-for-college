@@ -41,8 +41,8 @@ def make_bbox(path):
         cv2.rectangle(image, (x, y), (x + w, y + h), (36, 255, 12), 2)
 
         bbox.append((x, y, w, h))
-    cv2.imshow('a', image)
-    cv2.waitKey()
+    #cv2.imshow('a', image)
+    # cv2.waitKey()
     size = image.shape[0], image.shape[1]
 
     bbox_sorted = sorted(bbox, key=lambda b: b[2]*b[3], reverse=True)

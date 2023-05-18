@@ -15,7 +15,7 @@ augmented_data_path = f'{cwd}/opencv/pliers_buffor/'
 dataset_path = f'{cwd}/opencv/dataset_pliers/'
 
 ratio = [0.85, 0.1, 0.05]
-images_amount = 5
+images_amount = 400
 
 train_ratio = math.floor(images_amount * ratio[0])
 test_ratio = math.floor(images_amount * ratio[1])
